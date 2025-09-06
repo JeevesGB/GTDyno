@@ -40,26 +40,9 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 ## Building to .exe (Windows)
 
 1. **Install PyInstaller**  
-   Open Command Prompt and run:
-   ```
-   pip install pyinstaller
-   ```
-
-2. **Build the executable**  
-   In the folder containing `gtd.py`, run:
-   ```
-   pyinstaller --onefile --windowed gtd.py
-   ```
-   - The `--onefile` flag creates a single `.exe` file.
-   - The `--windowed` flag prevents a console window from appearing.
-
-3. **Find your .exe**  
-   The built executable will be in the `dist` folder as `gtd.exe`.
-
-4. **Distribute**  
-   You can now share the `gtd.exe` file. Make sure to include any required data files (like your CSVs) as needed.
-
-   ---
+   Download "src" folder.
+2. **Run .bat**
+   run either build.bat (Builds a .exe LARGE FILE SIZE) or run-cmd.bat (Runs the script from command prompt).
 
 ## Usage
 

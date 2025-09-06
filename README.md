@@ -9,8 +9,7 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 
 - [Features](#features)
 - [Requirements](#requirements)
-- [Installation (Windows)](#installation-windows)
-- [Running the Application](#running-the-application)
+- [Installation (Windows)](#building-to-exe-windows)
 - [Usage](#usage)
 - [Notes](#notes)
 - [Troubleshooting](#troubleshooting)

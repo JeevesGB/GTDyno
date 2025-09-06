@@ -42,7 +42,7 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 1. **Install PyInstaller**  
    Download "src" folder.
 2. **Run .bat**
-   run either build.bat (Builds a .exe LARGE FILE SIZE) or run-cmd.bat (Runs the script from command prompt).
+   Run either build.bat (Builds a .exe LARGE FILE SIZE) or run-cmd.bat (Runs the script from command prompt).
 
 ## Usage
 

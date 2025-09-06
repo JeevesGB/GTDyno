@@ -38,38 +38,29 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 
 ---
 
-## Installation (Windows)
+## Building to .exe (Windows)
 
-1. **Install Python**  
-   Download and install Python from [python.org](https://www.python.org/downloads/).  
-   Make sure to check "Add Python to PATH" during installation.
-
-2. **Install dependencies**  
+1. **Install PyInstaller**  
    Open Command Prompt and run:
    ```
-   pip install PyQt6 matplotlib pandas
+   pip install pyinstaller
    ```
 
-3. **Clone or copy this repository**  
-   Place all files (including `gtd.py` and your CSV data) in a folder.
+2. **Build the executable**  
+   In the folder containing `gtd.py`, run:
+   ```
+   pyinstaller --onefile --windowed gtd.py
+   ```
+   - The `--onefile` flag creates a single `.exe` file.
+   - The `--windowed` flag prevents a console window from appearing.
 
----
+3. **Find your .exe**  
+   The built executable will be in the `dist` folder as `gtd.exe`.
 
-## Running the Application
+4. **Distribute**  
+   You can now share the `gtd.exe` file. Make sure to include any required data files (like your CSVs) as needed.
 
-Open Command Prompt, navigate to the folder containing `gtd.py`, and run:
-
-```
-python gtd.py
-```
-
-Or, if you have multiple Python versions:
-
-```
-py -3 gtd.py
-```
-
----
+   ---
 
 ## Usage
 
@@ -95,7 +86,3 @@ py -3 gtd.py
 - If you have multiple Python versions, use `py -3 gtd.py` or specify the full path to your Python executable.
 
 ---
-
-## License
-
-MIT License (see

@@ -28,7 +28,6 @@ class DynoApp(QMainWindow):
         toolbar = QToolBar("Main Toolbar")
         self.addToolBar(toolbar)
         #toolbar.addWidget(QLabel(" Engine Dynograph Viewer "))
-    # Add buttons to toolbar
         self.load_btn = QPushButton(" Load ENGINE CSV ")
         self.load_btn.clicked.connect(self.load_csv)
         toolbar.addWidget(self.load_btn)
@@ -177,24 +176,21 @@ class DynoApp(QMainWindow):
             car_label = item.text()
             row = self.data[self.data["CarLabel"] == car_label].iloc[0] if "CarLabel" in self.data.columns else self.data[self.data["CarId"] == car_label].iloc[0]
 
-            # === GT2 format detection ===
+# === GT2 format detection ===
             if "TorqueCurve1" in self.data.columns and "TorqueCurveRPM1" in self.data.columns:
                 torque_points = int(row.get("TorqueCurvePoints", 0))
                 torques_nm = [float(row.get(f"TorqueCurve{i+1}", 0)) / 10 for i in range(torque_points)]
                 rpms = [int(row.get(f"TorqueCurveRPM{i+1}", 0)) * 100 for i in range(torque_points)]
 
-                # Plot torque
                 max_torque = max(torques_nm) if torques_nm else 0
                 self.ax.plot(rpms, torques_nm, color=self.torque_color,
                              label=f"{car_label} - Torque ({max_torque:.1f} Nm)")
 
-                # Calculate & plot power (HP)
                 powers = [(t * rpm) / 9549 for t, rpm in zip(torques_nm, rpms)]
                 max_power = max(powers) if powers else 0
                 self.ax2.plot(rpms, powers, linestyle="--", color=self.power_color,
                               label=f"{car_label} - Power (HP) ({max_power:.1f} HP)")
 
-                # Metadata
                 metadata = {
                     "Displacement (cc)": f"{row.get('Displacement', 'N/A')}",
                     "Max Power": f"{row.get('DisplayedPower', 0)} HP @ {row.get('MaxPowerRPM', 0)}",
@@ -208,7 +204,7 @@ class DynoApp(QMainWindow):
                     self.meta_box.append(f"{k}: {v}")
                 self.meta_box.append("\n")
 
-            # === GT4-style format ===
+    # === GT4-style format ===
             else:
                 torque_points = int(row.get("torquepoint", 0))
                 torques_kgfm = [float(row.get(f"torque{chr(65+i)}", 0)) / 100 for i in range(torque_points)]
@@ -239,7 +235,6 @@ class DynoApp(QMainWindow):
                     self.meta_box.append(f"{k}: {v}")
                 self.meta_box.append("\n")
 
-        # Common graph settings
         self.ax.set_xlabel("RPM")
         self.ax.set_ylabel("Torque (Nm)")
         self.ax2.set_ylabel("Power (HP)")
@@ -260,7 +255,6 @@ class DynoApp(QMainWindow):
             if not all_files:
                 return
 
-            # Merge all CSVs into one DataFrame
             dataframes = []
             for f in all_files:
                 try:
@@ -274,7 +268,6 @@ class DynoApp(QMainWindow):
                 self.data = pd.concat(dataframes, ignore_index=True)
                 self.file_list.clear()
 
-                # Detect ID column
                 if "CarLabel" in self.data.columns:
                     id_col = "CarLabel"
                 elif "CarId" in self.data.columns:
@@ -299,13 +292,12 @@ class DynoApp(QMainWindow):
             for col, edit in self.edit_fields.items():
                 val = edit.text()
                 dtype = self.data[col].dtype
-                # Type-safe assignment
                 if pd.api.types.is_integer_dtype(dtype):
                     try:
                         self.data.at[idx, col] = int(val)
-                        edit.setStyleSheet("")  # reset style if valid
+                        edit.setStyleSheet("")  
                     except Exception:
-                        edit.setStyleSheet("background-color: #ffcccc;")  # highlight error
+                        edit.setStyleSheet("background-color: #ffcccc;")  
                         continue
                 elif pd.api.types.is_float_dtype(dtype):
                     try:
@@ -344,8 +336,7 @@ class DynoApp(QMainWindow):
             self.data = pd.read_csv(file)
             self.file_list.clear()
 
-            # Detect which column to use for car identifier
-            if "CarLabel" in self.data.columns:  # GT4 / Concept
+            if "CarLabel" in self.data.columns:  # GT3 / Concept
                 id_col = "CarLabel"
             elif "CarId" in self.data.columns:  # GT2
                 id_col = "CarId"

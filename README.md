@@ -73,7 +73,10 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 
 ## Notes
 
-- Changes are kept in memory. To export, you can add a "Save to CSV" feature or use pandas' `to_csv()` in the code.
+   **You are free to alter and edit this code however you see fit.**
+
+
+- Changes are kept in memory. To export, you need to click either "Save to CSV" or "SAVE AS".
 - The editor enforces numeric types for numeric fields.
 - The UI is optimized for Windows and dark mode.
 
@@ -82,6 +85,8 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 ## Troubleshooting
 
 - If you get errors about missing modules, ensure you installed all dependencies with `pip install PyQt6 matplotlib pandas`.
-- If you have multiple Python versions, use `py -3 gtd.py` or specify the full path to your Python executable.
+- If you have multiple Python versions, use `py -3 gt2-0.01.py` or specify the full path to your Python executable.
 
 ---
+
+

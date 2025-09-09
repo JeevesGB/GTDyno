@@ -1,3 +1,4 @@
+#---------------------------------------|
 import sys
 import os
 import re
@@ -414,8 +415,10 @@ class DynoApp(QMainWindow):
             self.bottom_layout.addWidget(label, grid_row, grid_col)
             self.bottom_layout.addWidget(edit, grid_row, grid_col + 1)
             self.edit_fields[col] = edit
+#---------------------------------------|
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = DynoApp()
     window.show()
     sys.exit(app.exec())
+#---------------------------------------|

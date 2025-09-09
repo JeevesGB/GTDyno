@@ -41,6 +41,11 @@ class DynoApp(QMainWindow):
         self.save_btn.clicked.connect(self.save_changes)
         toolbar.addWidget(self.save_btn)
         
+        self.save_as_btn = QPushButton(" Save As ")
+        self.save_as_btn.clicked.connect(self.save_as)
+        toolbar.addWidget(self.save_as_btn)
+
+        
         self.torque_color_btn = QPushButton(" Select Torque Color ")
         self.torque_color_btn.clicked.connect(self.set_torque_color)
         toolbar.addWidget(self.torque_color_btn)
@@ -315,6 +320,23 @@ class DynoApp(QMainWindow):
             print("Error updating values:", e)
             self.plot_selected()
             self.fill_edit_fields()    
+
+    def save_as(self):
+        if self.data is None:
+            return
+        file, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save As",
+            "",
+            "CSV Files (*.csv)"
+        )
+        if file:
+            try:
+                self.data.to_csv(file, index=False)
+                print(f"Saved as {file}")
+            except Exception as e:
+                print(f"Error saving file: {e}")
+
 
     def load_csv(self):
         file, _ = QFileDialog.getOpenFileName(self, "Select ENGINE CSV", "", "CSV Files (*.csv)")

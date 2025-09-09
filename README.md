@@ -35,8 +35,8 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 - Extract the contents of the zip folder anywhere and go into the ***src*** folder, you will see two .bat files. 
 ![alt text](image-4.png)
 
-- *build.bat*: This will build the python script into a working .exe file. Please note that the file size is quite large at around 100mb.
-- *run-cmd.bat*: This will run the application from commandline. Notably quicker to get started as it saves waiting for the .exe to build.
+- *build.bat* ![alt text](image-5.png) : This will build the python script into a working .exe file. Please note that the file size is quite large at around 100mb. 
+- *run-cmd.bat* ![alt text](image-6.png) : This will run the application from Command Line. Notably quicker to get started as it saves having to wait for the .exe to build.
 
 - Now you have it open all you just need to navigate to your *Engine* folder. ![alt text](image-3.png)
 

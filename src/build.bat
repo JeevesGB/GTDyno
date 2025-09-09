@@ -2,7 +2,7 @@
 set EXENAME=GTDyno
 
 REM Build gtd.py into a single EXE with no console window
- pyinstaller --onefile --windowed --name GTDyno --exclude-module tkinter --exclude-module test gtd.py
+ pyinstaller --onefile --windowed --name GTDyno --exclude-module tkinter --exclude-module test gtd-0.01.py
 
 echo.
 echo %EXENAME% built!

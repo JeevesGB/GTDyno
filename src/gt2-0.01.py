@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6 import QtGui 
-
+#---------------------------------------|
 class DynoApp(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -119,19 +119,19 @@ class DynoApp(QMainWindow):
 
 # Apply default dark style
         self.apply_dark_theme()
-
+#---------------------------------------|
     def set_torque_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
             self.torque_color = color.name()
             self.plot_selected()
-
+#---------------------------------------|
     def set_power_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
             self.power_color = color.name()
             self.plot_selected()
-
+#---------------------------------------|
     def apply_dark_theme(self):
         """Force a dark theme for both Qt and matplotlib."""
         dark_stylesheet = """
@@ -155,7 +155,7 @@ class DynoApp(QMainWindow):
             for spine in ax.spines.values():
                 spine.set_color("#4f484a")
             ax.grid(color="#2B2529")
-
+#---------------------------------------|
     def plot_selected(self):
         if self.data is None:
             return
@@ -250,7 +250,7 @@ class DynoApp(QMainWindow):
         lines2, labels2 = self.ax2.get_legend_handles_labels()
         self.ax.legend(lines1 + lines2, labels1 + labels2)
         self.canvas.draw()
-
+#---------------------------------------|
     def load_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Folder with ENGINE CSVs")
         if folder:
@@ -284,7 +284,7 @@ class DynoApp(QMainWindow):
                 for _, row in self.data.iterrows():
                     label = row.get(id_col, "Unknown")
                     self.file_list.addItem(str(label))
-
+#---------------------------------------|
     def save_changes(self):
         selected_items = self.file_list.selectedItems()
         if not selected_items or self.data is None:
@@ -320,7 +320,7 @@ class DynoApp(QMainWindow):
             print("Error updating values:", e)
             self.plot_selected()
             self.fill_edit_fields()    
-
+#---------------------------------------|
     def save_as(self):
         if self.data is None:
             return
@@ -336,8 +336,7 @@ class DynoApp(QMainWindow):
                 print(f"Saved as {file}")
             except Exception as e:
                 print(f"Error saving file: {e}")
-
-
+#---------------------------------------|
     def load_csv(self):
         file, _ = QFileDialog.getOpenFileName(self, "Select ENGINE CSV", "", "CSV Files (*.csv)")
         if file:
@@ -355,7 +354,7 @@ class DynoApp(QMainWindow):
             for _, row in self.data.iterrows():
                 label = row.get(id_col, "Unknown")
                 self.file_list.addItem(str(label))
-
+#---------------------------------------|
     def extract_number(self, s):
         if isinstance(s, str):
             match = re.search(r'\d+', s)
@@ -364,7 +363,7 @@ class DynoApp(QMainWindow):
             return int(s)
         except Exception:
             return 0
-
+#---------------------------------------|
     def fill_edit_fields(self):
         # Clear previous editors
         for i in reversed(range(self.bottom_layout.count())):

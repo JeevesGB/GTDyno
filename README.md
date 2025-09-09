@@ -39,7 +39,7 @@ It features a dynograph plot, metadata display and editor for all engine fields.
 
 - Now you have it open all you just need to navigate to your *Engine* folder. ![alt text](image-3.png)
 
-- Once loaded you will see a list of cars as they're named within the .csv file, select one to view their information in the box below. src/info.png
+- Once loaded you will see a list of cars as they're named within the .csv file, select one to view their information in the box below. ![alt text](src/info.png)
 
 
 

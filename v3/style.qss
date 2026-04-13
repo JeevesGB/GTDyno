@@ -1,0 +1,139 @@
+/* ===== Base ===== */
+QMainWindow, QWidget, QDialog {
+    background-color: #00070d;        /* slightly lifted from pure black */
+    color: #e6edf3;
+    font-family: "Segoe UI", Arial;
+    font-size: 13px;
+}
+
+/* ===== Panels / Containers ===== */
+QWidget#panel {
+    background-color: #001524;
+    border: 1px solid #002b45;
+    border-radius: 6px;
+}
+
+/* ===== Table ===== */
+QTableWidget {
+    background-color: #001524;
+    gridline-color: #01263f;
+    border: 1px solid #002b45;
+    alternate-background-color: #001b2e;
+    selection-background-color: #003a64;
+    selection-color: #ffffff;
+}
+
+QHeaderView::section {
+    background-color: #011d31;
+    padding: 6px;
+    border: none;
+    font-weight: 600;
+    color: #cfe8ff;
+}
+
+/* ===== Buttons ===== */
+QPushButton {
+    background-color: #01263f;
+    border: 1px solid #003a64;
+    padding: 8px 14px;
+    border-radius: 5px;
+    font-size: 12.5px;
+}
+
+QPushButton:hover {
+    background-color: #014a7a;
+    border: 1px solid #0a6fb3;
+}
+
+QPushButton:pressed {
+    background-color: #001b2e;
+}
+
+/* Primary action button (optional usage via setObjectName) */
+QPushButton#primary {
+    background-color: #0a84ff;
+    border: none;
+    color: white;
+}
+
+QPushButton#primary:hover {
+    background-color: #339cff;
+}
+
+QPushButton#primary:pressed {
+    background-color: #0066cc;
+}
+
+/* ===== ComboBox ===== */
+QComboBox {
+    background-color: #001524;
+    border: 1px solid #003a64;
+    padding: 5px 8px;
+    border-radius: 4px;
+}
+
+QComboBox:hover {
+    border: 1px solid #0a6fb3;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #001524;
+    border: 1px solid #003a64;
+    selection-background-color: #003a64;
+}
+
+/* ===== Scrollbars ===== */
+QScrollBar:vertical {
+    background: #00070d;
+    width: 10px;
+    margin: 2px;
+}
+
+QScrollBar::handle:vertical {
+    background: #003a64;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #0a6fb3;
+}
+
+QScrollBar::add-line, 
+QScrollBar::sub-line {
+    height: 0;
+}
+
+/* ===== Status Bar ===== */
+QStatusBar {
+    background-color: #00070d;
+    color: #9fb3c8;
+    padding: 4px;
+    border-top: 1px solid #002b45;
+}
+
+/* ===== Labels ===== */
+QLabel {
+    color: #d6e2f0;
+}
+
+/* ===== Inputs (future-proofing) ===== */
+QLineEdit, QTextEdit {
+    background-color: #001524;
+    border: 1px solid #003a64;
+    border-radius: 4px;
+    padding: 5px;
+    color: #e6edf3;
+}
+
+/* ===== Tooltips ===== */
+QToolTip {
+    background-color: #01263f;
+    color: #ffffff;
+    border: 1px solid #0a6fb3;
+    padding: 4px;
+}

@@ -1,189 +1,320 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-import numpy as np
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
 import sys
 import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
-def generate_dyno_sheet(csv_path, save_plot=False):
-    try:
-        df = pd.read_csv(csv_path)
-        if df.empty:
-            raise ValueError("CSV file is empty.")
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+    QPushButton, QFileDialog, QMessageBox, QTableWidget, QTableWidgetItem,
+    QSplitter, QStatusBar, QComboBox, QHeaderView
+)
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFont
 
-        row = df.iloc[0]
-
-        # Get number of valid points
-        num_points = int(row['TorqueCurvePoints'])
-
-        # Extract RPM and Torque
-        rpm_raw = np.array([float(row[f'TorqueCurveRPM{i}']) for i in range(1, 17)])
-        torque_raw = np.array([float(row[f'TorqueCurve{i}']) for i in range(1, 17)])
-
-        # Keep only valid points
-        rpm_raw = rpm_raw[:num_points]
-        torque_raw = torque_raw[:num_points]
-
-        # Scale values correctly
-        rpm = rpm_raw * 100.0
-        torque_nm = torque_raw / 10.0
-
-        # Calculate Power in hp
-        power_kw = (torque_nm * rpm) / 9549.3
-        power_hp = power_kw * 1.341
-
-        # Find max values
-        max_torque_idx = np.argmax(torque_nm)
-        max_power_idx = np.argmax(power_hp)
-
-        # ====================== PLOT ======================
-        fig, ax1 = plt.subplots(figsize=(12, 7))
-
-        color_torque = 'tab:blue'
-        ax1.set_xlabel('Engine Speed (RPM)', fontsize=12, fontweight='bold')
-        ax1.set_ylabel('Torque (Nm)', color=color_torque, fontsize=12, fontweight='bold')
-        ax1.plot(rpm, torque_nm, color=color_torque, marker='o', linestyle='-', linewidth=2.5, 
-                 markersize=6, label='Torque (Nm)')
-        ax1.tick_params(axis='y', labelcolor=color_torque)
-        ax1.grid(True, linestyle='--', alpha=0.7)
-
-        ax2 = ax1.twinx()
-        color_power = 'tab:red'
-        ax2.set_ylabel('Power (hp)', color=color_power, fontsize=12, fontweight='bold')
-        ax2.plot(rpm, power_hp, color=color_power, marker='o', linestyle='-', linewidth=2.5, 
-                 markersize=6, label='Power (hp)')
-        ax2.tick_params(axis='y', labelcolor=color_power)
-
-        # Title
-        car_id = row['CarId']
-        layout = row['LayoutName']
-        aspiration = row['Aspiration']
-        displacement = int(row['Displacement'])
-
-        plt.title(f'Engine Dyno Sheet — {car_id}\n'
-                  f'{layout} • {aspiration} • {displacement} cc\n'
-                  f'Max Torque: {torque_nm[max_torque_idx]:.1f} Nm @ {rpm[max_torque_idx]:.0f} RPM | '
-                  f'Max Power: {power_hp[max_power_idx]:.0f} hp @ {rpm[max_power_idx]:.0f} RPM',
-                  fontsize=14, fontweight='bold', pad=25)
-
-        # Legend
-        lines1, labels1 = ax1.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left', fontsize=11)
-
-        # Vertical lines at peaks
-        ax1.axvline(rpm[max_torque_idx], color=color_torque, linestyle='--', alpha=0.6, linewidth=1.5)
-        ax2.axvline(rpm[max_power_idx], color=color_power, linestyle='--', alpha=0.6, linewidth=1.5)
-
-        plt.tight_layout()
-
-        if save_plot:
-            save_path = csv_path.replace('.csv', '_dyno_sheet.png')
-            plt.savefig(save_path, dpi=300, bbox_inches='tight')
-            print(f"Plot saved as: {save_path}")
-
-        plt.show()
-
-    except Exception as e:
-        messagebox.showerror("Error", f"Failed to generate dyno sheet:\n{str(e)}")
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 
-# ====================== GUI ======================
-def browse_file():
-    filename = filedialog.askopenfilename(
-        title="Select Engine CSV File",
-        filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")]
-    )
-    if filename:
-        entry_path.delete(0, tk.END)
-        entry_path.insert(0, filename)
-
-def generate_from_gui():
-    csv_path = entry_path.get().strip()
-    if not csv_path or not os.path.isfile(csv_path):
-        messagebox.showwarning("Warning", "Please select a valid CSV file.")
-        return
-    
-    save_option = save_var.get()
-    generate_dyno_sheet(csv_path, save_plot=save_option)
+KG_M_TO_NM = 9.80665   # Accurate conversion: 1 kgf·m = 9.80665 Nm
 
 
-# Create main window
-root = tk.Tk()
-root.title("Engine Dyno Sheet Generator")
-root.geometry("700x520")
-root.resizable(True, True)
+class DynoPreview(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.figure = Figure(figsize=(7.5, 6), dpi=110, facecolor='#1e1e1e')
+        self.canvas = FigureCanvas(self.figure)
+        self.ax1 = self.figure.add_subplot(111)
+        self.ax2 = self.ax1.twinx()
 
-# Style
-style = ttk.Style()
-style.theme_use('clam')
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.canvas)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-# Title
-tk.Label(root, text="Engine Dyno Sheet Generator", font=("Helvetica", 18, "bold")).pack(pady=15)
+    def update_plot(self, row, unit="Nm"):
+        self.ax1.clear()
+        self.ax2.clear()
 
-# File selection frame
-frame = ttk.Frame(root, padding=20)
-frame.pack(fill="x", padx=30)
+        try:
+            num_points = int(row['TorqueCurvePoints'])
+            rpm_raw = np.array([float(row[f'TorqueCurveRPM{i}']) for i in range(1, 17)])[:num_points]
+            torque_raw = np.array([float(row[f'TorqueCurve{i}']) for i in range(1, 17)])[:num_points]
 
-ttk.Label(frame, text="CSV File:", font=("Helvetica", 10)).pack(anchor="w")
-entry_frame = ttk.Frame(frame)
-entry_frame.pack(fill="x", pady=5)
+            rpm = rpm_raw * 100.0
+            torque_kgm = torque_raw / 10.0                     # raw stored value
 
-entry_path = ttk.Entry(entry_frame, width=70, font=("Consolas", 10))
-entry_path.pack(side="left", expand=True, fill="x")
+            if unit == "kgm":
+                torque_nm = torque_kgm * KG_M_TO_NM
+                torque_display = torque_kgm
+                torque_label = "Torque (kgm)"
+            else:
+                torque_nm = torque_kgm
+                torque_display = torque_nm
+                torque_label = "Torque (Nm)"
 
-btn_browse = ttk.Button(entry_frame, text="Browse...", command=browse_file)
-btn_browse.pack(side="right", padx=(10, 0))
+            power_hp = ((torque_nm * rpm) / 9549.3) * 1.341
 
-# Options
-save_var = tk.BooleanVar(value=True)
-chk_save = ttk.Checkbutton(frame, text="Save plot as PNG next to CSV file", variable=save_var)
-chk_save.pack(anchor="w", pady=10)
+            if len(rpm) == 0:
+                return
 
-# Generate Button
-btn_generate = ttk.Button(root, text="Generate Dyno Sheet", command=generate_from_gui, 
-                         style="Accent.TButton")
-btn_generate.pack(pady=20)
+            max_t_idx = np.argmax(torque_nm)
+            max_p_idx = np.argmax(power_hp)
 
-# Separator
-ttk.Separator(root, orient="horizontal").pack(fill="x", padx=40, pady=10)
+            color_torque = '#00bfff'
+            color_power = '#ff4d4d'
 
-# Command Line Instructions
-tk.Label(root, text="Command Line Usage (Alternative)", font=("Helvetica", 11, "bold")).pack(pady=(10,5))
+            self.ax1.plot(rpm, torque_display, 'o-', color=color_torque, linewidth=2.8, markersize=6, label=torque_label)
+            self.ax2.plot(rpm, power_hp, 'o-', color=color_power, linewidth=2.8, markersize=6, label='Power (hp)')
 
-cmd_text = tk.Text(root, height=8, font=("Consolas", 9), bg="#f8f8f8")
-cmd_text.pack(fill="both", padx=40, pady=5)
+            self.ax1.set_xlabel('Engine Speed (RPM)', color='white', fontsize=11, fontweight='bold')
+            self.ax1.set_ylabel(torque_label, color=color_torque, fontsize=11, fontweight='bold')
+            self.ax2.set_ylabel('Power (hp)', color=color_power, fontsize=11, fontweight='bold')
 
-cmd_instructions = """How to run from Command Line:
+            self.ax1.tick_params(colors='white')
+            self.ax2.tick_params(colors='white')
+            self.ax1.grid(True, linestyle='--', alpha=0.5, color='#444')
 
-1. Save this script as dyno_generator.py
+            car_id = row.get('CarId', 'Engine')
+            self.figure.suptitle(f'Live Preview — {car_id}  |  Unit: {unit}', 
+                               color='white', fontsize=14, fontweight='bold')
 
-2. Put your CSV file (e.g. a2aan.csv) in the same folder
+            self.ax1.legend(loc='upper left', fontsize=10, labelcolor='white')
 
-3. Run one of these commands:
+            self.ax1.axvline(rpm[max_t_idx], color=color_torque, linestyle='--', alpha=0.75, linewidth=1.5)
+            self.ax2.axvline(rpm[max_p_idx], color=color_power, linestyle='--', alpha=0.75, linewidth=1.5)
 
-   python dyno_generator.py a2aan.csv
-   python dyno_generator.py "path/to/your/file.csv" --save
+            self.canvas.draw()
 
-Note: The GUI version is recommended for ease of use.
-"""
-cmd_text.insert("1.0", cmd_instructions)
-cmd_text.config(state="disabled")
+        except Exception:
+            pass
 
-# Footer
-tk.Label(root, text="Made for realistic engine torque curve visualization", 
-         font=("Helvetica", 9), fg="gray").pack(side="bottom", pady=10)
 
-# Run the GUI
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("GT Dyno Sheet Generator — PyQt6 (Supports kgm)")
+        self.resize(1400, 800)
+
+        self.setStyleSheet("""
+            QMainWindow, QWidget { background-color: #121212; color: #ffffff; }
+            QTableWidget { background-color: #1e1e1e; gridline-color: #333333; }
+            QHeaderView::section { background-color: #2d2d2d; padding: 6px; }
+            QPushButton { padding: 8px 16px; }
+        """)
+
+        self.current_row = None
+        self.current_csv_path = None
+        self.current_unit = "Nm"   # Default
+
+        central = QWidget()
+        self.setCentralWidget(central)
+        main_layout = QVBoxLayout(central)
+        main_layout.setSpacing(12)
+
+        header_layout = QHBoxLayout()
+        header = QLabel("GT Dyno Sheet Generator")
+        header.setFont(QFont("Helvetica", 18, QFont.Weight.Bold))
+        header_layout.addWidget(header)
+
+        unit_label = QLabel("Torque Unit:")
+        self.unit_combo = QComboBox()
+        self.unit_combo.addItems(["Nm", "kgm (GT2 / Gran Turismo)"])
+        self.unit_combo.currentTextChanged.connect(self.on_unit_changed)
+        header_layout.addStretch()
+        header_layout.addWidget(unit_label)
+        header_layout.addWidget(self.unit_combo)
+
+        main_layout.addLayout(header_layout)
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        main_layout.addWidget(splitter, stretch=1)
+
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(12, 12, 12, 12)
+
+        self.torque_label = QLabel("Torque Curve Editor")
+        left_layout.addWidget(self.torque_label)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(3)
+        self.table.setHorizontalHeaderLabels(["Point", "RPM ×100", "Torque"])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.setAlternatingRowColors(True)
+        self.table.cellChanged.connect(self.on_cell_changed)
+        left_layout.addWidget(self.table)
+
+        btn_layout = QHBoxLayout()
+        self.btn_load = QPushButton("Load CSV")
+        self.btn_save = QPushButton("Save As New CSV")
+        self.btn_generate = QPushButton("Generate Full Dyno Sheet")
+
+        self.btn_load.clicked.connect(self.load_csv)
+        self.btn_save.clicked.connect(self.save_edited)
+        self.btn_generate.clicked.connect(self.generate_full_sheet)
+
+        btn_layout.addWidget(self.btn_load)
+        btn_layout.addWidget(self.btn_save)
+        btn_layout.addWidget(self.btn_generate)
+        left_layout.addLayout(btn_layout)
+
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(12, 12, 12, 12)
+        right_layout.addWidget(QLabel("Live Dyno Preview"))
+        self.preview = DynoPreview()
+        right_layout.addWidget(self.preview)
+
+        splitter.addWidget(left_widget)
+        splitter.addWidget(right_widget)
+        splitter.setSizes([550, 850])
+
+        self.statusBar = QStatusBar()
+        self.setStatusBar(self.statusBar)
+
+    def on_unit_changed(self, text):
+        self.current_unit = "kgm" if "kgm" in text else "Nm"
+        self.table.setHorizontalHeaderLabels(["Point", "RPM ×100", f"Torque ({self.current_unit})"])
+        if self.current_row is not None:
+            self.update_table()
+            self.update_preview()
+
+    def load_csv(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Open CSV", "", "CSV Files (*.csv)")
+        if not path:
+            return
+
+        try:
+            df = pd.read_csv(path)
+            self.current_csv_path = path
+            self.current_row = df.iloc[0].copy()
+
+            self.update_table()
+            self.update_preview()
+            self.statusBar.showMessage(f"Loaded: {os.path.basename(path)}", 5000)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to load file:\n{str(e)}")
+
+    def update_table(self):
+        if self.current_row is None:
+            return
+
+        self.table.setRowCount(16)
+        for i in range(1, 17):
+            point = i
+            rpm_val = float(self.current_row[f'TorqueCurveRPM{i}'])
+            torque_raw = float(self.current_row[f'TorqueCurve{i}'])   # stored as x10
+
+            torque_display = torque_raw / 10.0                     # base value
+            if self.current_unit == "kgm":
+                torque_display = torque_display                     # show as kgm (game value)
+            # else: keep as Nm
+
+            self.table.setItem(i-1, 0, QTableWidgetItem(str(point)))
+            self.table.setItem(i-1, 1, QTableWidgetItem(str(rpm_val)))
+            self.table.setItem(i-1, 2, QTableWidgetItem(f"{torque_display:.2f}"))
+
+            self.table.item(i-1, 0).setFlags(self.table.item(i-1, 0).flags() & ~Qt.ItemFlag.ItemIsEditable)
+
+    def on_cell_changed(self, row, col):
+        if self.current_row is None or col != 2:   # only torque column is editable
+            return
+
+        try:
+            displayed_val = float(self.table.item(row, col).text())
+            point = row + 1
+
+            if self.current_unit == "kgm":
+                stored_val = displayed_val * 10.0
+            else:
+                stored_val = displayed_val * 10.0
+
+            self.current_row[f'TorqueCurve{point}'] = stored_val
+
+            valid = 0
+            for i in range(1, 17):
+                if float(self.current_row[f'TorqueCurveRPM{i}']) >= 0:
+                    valid = i
+                else:
+                    break
+            self.current_row['TorqueCurvePoints'] = valid
+
+            self.update_preview()
+
+        except ValueError:
+            QMessageBox.warning(self, "Invalid", "Please enter a valid number.")
+            self.update_table()   # revert
+
+    def update_preview(self):
+        if self.current_row is not None:
+            self.preview.update_plot(self.current_row, self.current_unit)
+
+    def save_edited(self):
+        if self.current_row is None:
+            QMessageBox.warning(self, "Warning", "Load a file first.")
+            return
+
+        path, _ = QFileDialog.getSaveAsFileName(
+            self, "Save Edited CSV As",
+            os.path.basename(self.current_csv_path or "engine_edited.csv").replace(".csv", "_edited.csv"),
+            "CSV Files (*.csv)"
+        )
+        if path:
+            try:
+                new_df = pd.DataFrame([self.current_row])
+                new_df.to_csv(path, index=False)
+                QMessageBox.information(self, "Saved", f"Saved successfully:\n{path}")
+            except Exception as e:
+                QMessageBox.critical(self, "Error", str(e))
+
+    def generate_full_sheet(self):
+        if self.current_row is None:
+            QMessageBox.warning(self, "Warning", "Load a CSV first.")
+            return
+
+        try:
+            rpm_raw = np.array([float(self.current_row[f'TorqueCurveRPM{i}']) for i in range(1, 17)])
+            torque_raw = np.array([float(self.current_row[f'TorqueCurve{i}']) for i in range(1, 17)])
+            num_points = int(self.current_row['TorqueCurvePoints'])
+
+            rpm = rpm_raw[:num_points] * 100.0
+            torque_kgm = torque_raw[:num_points] / 10.0
+
+            torque_nm = torque_kgm * KG_M_TO_NM if self.current_unit == "kgm" else torque_kgm
+            power_hp = ((torque_nm * rpm) / 9549.3) * 1.341
+
+            fig, ax1 = plt.subplots(figsize=(12, 7))
+            torque_label = f'Torque ({self.current_unit})'
+
+            ax1.plot(rpm, torque_kgm if self.current_unit == "kgm" else torque_nm, 
+                     'o-', color='tab:blue', linewidth=2.5, markersize=6, label=torque_label)
+            ax2 = ax1.twinx()
+            ax2.plot(rpm, power_hp, 'o-', color='tab:red', linewidth=2.5, markersize=6, label='Power (hp)')
+
+            ax1.set_xlabel('Engine Speed (RPM)')
+            ax1.set_ylabel(torque_label, color='tab:blue')
+            ax2.set_ylabel('Power (hp)', color='tab:red')
+            ax1.grid(True, linestyle='--', alpha=0.7)
+
+            max_t = np.argmax(torque_nm)
+            max_p = np.argmax(power_hp)
+
+            ax1.set_title(f'Engine Dyno Sheet — {self.current_row.get("CarId", "Engine")}\n'
+                          f'Max Torque: {torque_kgm[max_t]:.2f} {self.current_unit} @ {rpm[max_t]:.0f} RPM | '
+                          f'Max Power: {power_hp[max_p]:.0f} hp @ {rpm[max_p]:.0f} RPM', pad=25)
+
+            ax1.legend(loc='upper left')
+            plt.tight_layout()
+            plt.show()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to generate plot:\n{str(e)}")
+
+
 if __name__ == "__main__":
-    # Allow command line usage as fallback
-    if len(sys.argv) > 1:
-        csv_file = sys.argv[1]
-        save_plot = "--save" in sys.argv
-        if os.path.isfile(csv_file):
-            generate_dyno_sheet(csv_file, save_plot=save_plot)
-        else:
-            print(f"Error: File '{csv_file}' not found.")
-    else:
-        root.mainloop()
+    app = QApplication(sys.argv)
+    app.setStyle('Fusion')
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())

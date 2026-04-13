@@ -1,6 +1,6 @@
 # GTDyno
 
-A PyQt6-based tool for visualizing and editing Gran Turismo 3 engine data from CSV files.  
+A PyQt6-based tool for visualizing and editing Gran Turismo 2 & 3 engine data from CSV files.  
 It features a dynograph plot, metadata display and editor for all engine fields.
 
 ---

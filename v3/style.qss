@@ -1,19 +1,17 @@
 /* ===== Base ===== */
 QMainWindow, QWidget, QDialog {
-    background-color: #00070d;        /* slightly lifted from pure black */
+    background-color: #00070d;
     color: #e6edf3;
     font-family: "Segoe UI", Arial;
     font-size: 13px;
 }
 
-/* ===== Panels / Containers ===== */
 QWidget#panel {
     background-color: #001524;
     border: 1px solid #002b45;
     border-radius: 6px;
 }
 
-/* ===== Table ===== */
 QTableWidget {
     background-color: #001524;
     gridline-color: #01263f;
@@ -31,7 +29,6 @@ QHeaderView::section {
     color: #cfe8ff;
 }
 
-/* ===== Buttons ===== */
 QPushButton {
     background-color: #01263f;
     border: 1px solid #003a64;
@@ -49,7 +46,6 @@ QPushButton:pressed {
     background-color: #001b2e;
 }
 
-/* Primary action button (optional usage via setObjectName) */
 QPushButton#primary {
     background-color: #0a84ff;
     border: none;
@@ -64,7 +60,6 @@ QPushButton#primary:pressed {
     background-color: #0066cc;
 }
 
-/* ===== ComboBox ===== */
 QComboBox {
     background-color: #001524;
     border: 1px solid #003a64;
@@ -86,7 +81,6 @@ QComboBox QAbstractItemView {
     selection-background-color: #003a64;
 }
 
-/* ===== Scrollbars ===== */
 QScrollBar:vertical {
     background: #00070d;
     width: 10px;
@@ -108,7 +102,6 @@ QScrollBar::sub-line {
     height: 0;
 }
 
-/* ===== Status Bar ===== */
 QStatusBar {
     background-color: #00070d;
     color: #9fb3c8;
@@ -116,12 +109,10 @@ QStatusBar {
     border-top: 1px solid #002b45;
 }
 
-/* ===== Labels ===== */
 QLabel {
     color: #d6e2f0;
 }
 
-/* ===== Inputs (future-proofing) ===== */
 QLineEdit, QTextEdit {
     background-color: #001524;
     border: 1px solid #003a64;
@@ -130,7 +121,6 @@ QLineEdit, QTextEdit {
     color: #e6edf3;
 }
 
-/* ===== Tooltips ===== */
 QToolTip {
     background-color: #01263f;
     color: #ffffff;

@@ -90,12 +90,13 @@ class DynoPreview(QWidget):
             rpm = rpm[mask]
             torque_kgm = torque_kgm[mask]
 
+            # Always convert kgm -> Nm for power calculation
+            torque_nm = torque_kgm * KG_M_TO_NM
+
             if unit == "kgm":
-                torque_nm = torque_kgm * KG_M_TO_NM
                 torque_display = torque_kgm
                 torque_label = "Torque (kgm)"
             else:
-                torque_nm = torque_kgm
                 torque_display = torque_nm
                 torque_label = "Torque (Nm)"
 
@@ -107,8 +108,8 @@ class DynoPreview(QWidget):
             max_t_idx = np.argmax(torque_nm)
             max_p_idx = np.argmax(power_hp)
 
-            self.ax1.plot(rpm, torque_display, 'o-', linewidth=2.7, markersize=5.5, label=torque_label)
-            self.ax2.plot(rpm, power_hp, 'o-', linewidth=2.7, markersize=5.5, label='Power (hp)')
+            torque_line, = self.ax1.plot(rpm, torque_display, 'o-', color='#2196F3', linewidth=2.7, markersize=5.5, label=torque_label)
+            power_line, = self.ax2.plot(rpm, power_hp, 'o-', color='#F44336', linewidth=2.7, markersize=5.5, label='Power (hp)')
 
             self.ax1.xaxis.set_major_locator(MultipleLocator(1000))
             self.ax1.xaxis.set_minor_locator(MultipleLocator(500))
@@ -133,10 +134,11 @@ class DynoPreview(QWidget):
                 y=0.97
             )
 
-            self.ax1.legend(loc='upper left', fontsize=9.8)
+            lines = [torque_line, power_line]
+            self.ax1.legend(lines, [l.get_label() for l in lines], loc='upper left', fontsize=9.8)
 
-            self.ax1.axvline(rpm[max_t_idx], linestyle='--', alpha=0.85, linewidth=1.5)
-            self.ax2.axvline(rpm[max_p_idx], linestyle='--', alpha=0.85, linewidth=1.5)
+            self.ax1.axvline(rpm[max_t_idx], color='#2196F3', linestyle='--', alpha=0.85, linewidth=1.5)
+            self.ax2.axvline(rpm[max_p_idx], color='#F44336', linestyle='--', alpha=0.85, linewidth=1.5)
 
             self.canvas.draw()
 
@@ -309,7 +311,7 @@ class MainWindow(QMainWindow):
         if self.current_row is None:
             QMessageBox.warning(self, "No Data", "Please load a CSV file first.")
             return
-        path, _ = QFileDialog.getSaveAsFileName(
+        path, _ = QFileDialog.getSaveFileName(
             self,
             "Save As",
             os.path.basename(self.current_csv_path or "engine_edited.csv"),
@@ -317,7 +319,8 @@ class MainWindow(QMainWindow):
         )
         if path:
             try:
-                pd.DataFrame([self.current_row]).to_csv(path, index=False)
+                import csv
+                pd.DataFrame([self.current_row]).to_csv(path, index=False, quoting=csv.QUOTE_ALL)
                 QMessageBox.information(self, "Success", f"File saved:\n{path}")
             except Exception as e:
                 QMessageBox.critical(self, "Error", str(e))
@@ -342,7 +345,7 @@ class MainWindow(QMainWindow):
             rpm = rpm[mask]
             torque_kgm = torque_kgm[mask]
 
-            torque_nm = torque_kgm * KG_M_TO_NM if self.current_unit == "kgm" else torque_kgm
+            torque_nm = torque_kgm * KG_M_TO_NM  # always Nm for power calc
             power_hp = ((torque_nm * rpm) / 9549.3) * 1.341
 
             fig, ax1 = plt.subplots(figsize=(13.5, 7.8))
